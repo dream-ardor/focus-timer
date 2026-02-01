@@ -1,11 +1,47 @@
 // Version 3: The correct approach with pause/resume
 
-let timeLeft = 300;
+let timeLeft = 5;
 let timerID = null;
 let isRunning = false;
 
 const displayElement = document.getElementById('display');
 const startButton = document.getElementById('startBtn');
+
+// === AUDIO ALERT ===
+
+// Simple beep sound (base64 encoded)
+const BEEP_SOUND = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm==';
+
+let isMuted = false; // Track mute state
+
+// Create audio element
+const alertSound = new Audio(BEEP_SOUND);
+
+// Function to play alert sound
+function playAlertSound() {
+    if (isMuted) {
+        console.log('Alert muted by user');
+        return;
+    }
+    
+    // Reset audio to beginning (in case it's already played)
+    alertSound.currentTime = 0;
+    
+    // Attempt to play
+    const playPromise = alertSound.play();
+    
+    // Handle the promise (could fail due to browser policies)
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Alert sound played successfully');
+            })
+            .catch(error => {
+                console.warn('Could not play alert sound:', error);
+                console.log('User may need to interact with page first');
+            });
+    }
+}
 
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
@@ -26,6 +62,7 @@ function tick() {
         timerID = null;
         isRunning = false;
         startButton.textContent = 'Start';
+        playAlertSound();
         console.log('Timer finished!');
     }
 }
@@ -165,4 +202,18 @@ minutesInput.addEventListener('keypress', function(event) {
 });
 
 // Disable input while timer is running
-// We'll add this to the start button logic in a moment
+// === MUTE TOGGLE ===
+
+const muteButton = document.getElementById('muteBtn');
+
+muteButton.addEventListener('click', function() {
+    isMuted = !isMuted; // Toggle the state
+    
+    if (isMuted) {
+        muteButton.textContent = '🔇';
+        console.log('Alert sound muted');
+    } else {
+        muteButton.textContent = '🔊';
+        console.log('Alert sound unmuted');
+    }
+});
