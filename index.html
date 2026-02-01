@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width", initial-scale="1.0">
+    <title>Focus Timer - Version 1</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#007AFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Focus">
+</head>
+<body>
+     <div class="container">
+    <h1>Focus Timer</h1>
+    
+    <div class="input-group">
+        <input 
+            type="number" 
+            id="minutesInput" 
+            min="1" 
+            max="999" 
+            placeholder="5"
+            aria-label="Timer duration in minutes"
+        >
+        <label for="minutesInput">minutes</label>
+        <button id="setBtn">Set</button>
+    </div>
+    
+    <div id="errorMessage" class="error-message"></div>
+    
+    <div id="display">5:00</div>
+    
+    <div class="button-group">
+        <button id="startBtn">Start</button>
+        <button id="resetBtn">Reset</button>
+    </div>
+</div>
+
+    <script src="app.js"></script>
+    </body>
+    </html>
