@@ -43,6 +43,89 @@ function playAlertSound() {
     }
 }
 
+// === VIBRATION ALERT ===
+
+// Function to trigger vibration
+function vibrateAlert() {
+    // Check if device supports vibration
+    if ('vibrate' in navigator) {
+        // Vibration pattern: [vibrate, pause, vibrate, pause, ...]
+        // Times are in milliseconds
+        // Pattern: long buzz (500ms), pause (200ms), long buzz (500ms)
+        navigator.vibrate([500, 200, 500]);
+        console.log('Vibration triggered');
+    } else {
+        console.log('Vibration not supported on this device');
+    }
+}
+
+// === ALARM SYSTEM ===
+
+let alarmInterval = null; // Track repeating alarm
+const dismissButton = document.getElementById('dismissBtn');
+
+// Function to flash the screen
+function flashScreen() {
+    const container = document.querySelector('.container');
+    
+    // Add flash class
+    container.style.backgroundColor = '#FF3B30';
+    container.style.transition = 'background-color 0.3s';
+    
+    // Reset after brief moment
+    setTimeout(function() {
+        container.style.backgroundColor = 'white';
+    }, 300);
+}
+
+// Function to start the alarm (repeating sound + vibration)
+function startAlarm() {
+    console.log('Alarm started - repeating every 2 seconds');
+    
+    // Show dismiss button
+    dismissButton.style.display = 'block';
+    
+    // Change page title (visible in browser tab)
+    document.title = '⏰ TIME\'S UP!';
+    
+    // Flash the screen
+    flashScreen();
+    
+    // Play sound and vibrate immediately
+    playAlertSound();
+    vibrateAlert();
+    
+    // Then repeat every 2 seconds
+    alarmInterval = setInterval(function() {
+        playAlertSound();
+        vibrateAlert();
+    }, 2000); // 2000ms = 2 seconds
+}
+
+// Function to stop the alarm
+function stopAlarm() {
+    console.log('Alarm dismissed');
+    
+    // Stop repeating
+    if (alarmInterval !== null) {
+        clearInterval(alarmInterval);
+        alarmInterval = null;
+    }
+    
+    // Hide dismiss button
+    dismissButton.style.display = 'none';
+    
+    // Reset page title
+    document.title = 'Focus Timer';
+}
+
+// Listen for dismiss button click
+dismissButton.addEventListener('click', function() {
+    stopAlarm();
+});
+
+// === TIMER FUNCTIONS ===
+
 function formatTime(seconds) {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -62,13 +145,18 @@ function tick() {
         timerID = null;
         isRunning = false;
         startButton.textContent = 'Start';
-        playAlertSound();
+        
+        // START THE ALARM
+        startAlarm();
+        
         console.log('Timer finished!');
     }
 }
 
 // Set initial display
 updateDisplay();
+
+// === START/PAUSE BUTTON ===
 
 startButton.addEventListener('click', function() {
     if (isRunning) {
@@ -77,21 +165,20 @@ startButton.addEventListener('click', function() {
         timerID = null;
         isRunning = false;
         startButton.textContent = 'Resume';
-        minutesInput.disabled = false;
         console.log('Timer paused at', timeLeft, 'seconds');
     } else {
+        // If timer finished, reset it
         if (timeLeft <= 0) {
             timeLeft = 300;
             updateDisplay();
         }
+        
         // START or RESUME
         isRunning = true;
         startButton.textContent = 'Pause';
-        minutesInput.disabled = true;
-        clearError();
         console.log('Timer starting from', timeLeft, 'seconds');
         
-        // Run first tick immediately (fixes the 1-second delay)
+        // Run first tick immediately
         tick();
         
         // Then continue ticking every second
@@ -99,9 +186,14 @@ startButton.addEventListener('click', function() {
     }
 });
 
+// === RESET BUTTON ===
+
 const resetButton = document.getElementById('resetBtn');
 
 resetButton.addEventListener('click', function() {
+    // Stop the alarm if it's going
+    stopAlarm();
+    
     // Stop the timer if running
     if (isRunning) {
         clearInterval(timerID);
@@ -113,8 +205,6 @@ resetButton.addEventListener('click', function() {
     timeLeft = 300;
     updateDisplay();
     startButton.textContent = 'Start';
-    minutesInput.disabled = false;
-    clearError();
     console.log('Timer reset to 5:00');
 });
 
@@ -201,7 +291,6 @@ minutesInput.addEventListener('keypress', function(event) {
     }
 });
 
-// Disable input while timer is running
 // === MUTE TOGGLE ===
 
 const muteButton = document.getElementById('muteBtn');

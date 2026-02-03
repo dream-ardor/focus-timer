@@ -110,3 +110,28 @@ button:hover {
 #muteBtn.hover {
     background: #555;
 }
+
+#dismissBtn {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 20px 40px;
+    background: #FF3B30;
+    color: white;
+    border: 3px solid #D32F2F;
+    margin: 20px 0;
+    animation: pulse 1s infinite;
+}
+
+#dismissBtn:hover {
+    background: #D32F2F;
+}
+
+/* Pulse animation to draw attention */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
