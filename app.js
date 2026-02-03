@@ -345,3 +345,85 @@ muteButton.addEventListener('click', function() {
         console.log('Alert sound unmuted');
     }
 });
+
+// === ADD TIMER FUNCTIONALITY ===
+
+const addTimerBtn = document.getElementById('addTimerBtn');
+const timerForm = document.getElementById('timerForm');
+const createTimerBtn = document.getElementById('createTimerBtn');
+const cancelTimerBtn = document.getElementById('cancelTimerBtn');
+const timerNameInput = document.getElementById('timerName');
+const timerDurationInput = document.getElementById('timerDuration');
+const formErrorElement = document.getElementById('formError');
+
+// Show the form when "Add Timer" is clicked
+addTimerBtn.addEventListener('click', function() {
+    timerForm.style.display = 'block';
+    timerNameInput.value = '';  // Clear previous values
+    timerDurationInput.value = '';
+    formErrorElement.textContent = '';  // Clear errors
+    timerNameInput.focus();  // Focus on name input
+});
+
+// Hide the form when "Cancel" is clicked
+cancelTimerBtn.addEventListener('click', function() {
+    timerForm.style.display = 'none';
+    formErrorElement.textContent = '';
+});
+
+// Create new timer when "Create Timer" is clicked
+createTimerBtn.addEventListener('click', function() {
+    // Get values
+    const name = timerNameInput.value.trim();
+    const durationStr = timerDurationInput.value.trim();
+    
+    // Clear previous errors
+    formErrorElement.textContent = '';
+    
+    // Validate name
+    if (name === '') {
+        formErrorElement.textContent = 'Please enter a timer name';
+        return;
+    }
+    
+    // Validate duration
+    if (durationStr === '') {
+        formErrorElement.textContent = 'Please enter a duration';
+        return;
+    }
+    
+    const duration = Number(durationStr);
+    
+    if (isNaN(duration)) {
+        formErrorElement.textContent = 'Duration must be a number';
+        return;
+    }
+    
+    if (!Number.isInteger(duration)) {
+        formErrorElement.textContent = 'Duration must be a whole number';
+        return;
+    }
+    
+    if (duration < 1) {
+        formErrorElement.textContent = 'Duration must be at least 1 minute';
+        return;
+    }
+    
+    if (duration > 999) {
+        formErrorElement.textContent = 'Duration cannot exceed 999 minutes';
+        return;
+    }
+    
+    // ALL VALIDATION PASSED - Create the timer
+    const newTimer = createTimer(name, duration);
+    timers.push(newTimer);
+    
+    console.log('Timer created:', newTimer);
+    console.log('All timers:', timers);
+    
+    // Hide the form
+    timerForm.style.display = 'none';
+    
+    // Show success feedback (optional)
+    alert(`Timer "${name}" created for ${duration} minutes!`);
+});

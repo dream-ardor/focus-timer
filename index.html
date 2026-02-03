@@ -35,6 +35,8 @@
 
     <button id="dismissBtn" style="display: none;">DISMISS ALARM</button>
     
+<button id="addTimerBtn" class="add-timer-btn">+ Add Timer</button>
+
    <div class="button-group">
     <button id="startBtn">Start</button>
     <button id="resetBtn">Reset</button>
@@ -42,6 +44,24 @@
 </div>
 
 <p class="device-note">💡 Tip: Haptic feedback works on Android. iOS Safari doesn't support vibration API.</p>
+</div>
+
+<!-- Timer Creation Form (hidden by default) -->
+<div id="timerForm" class="timer-form" style="display: none;">
+    <h3>Create New Timer</h3>
+    <div class="form-group">
+        <label for="timerName">Timer Name:</label>
+        <input type="text" id="timerName" placeholder="e.g., Coffee, Workout" maxlength="30">
+    </div>
+    <div class="form-group">
+        <label for="timerDuration">Duration (minutes):</label>
+        <input type="number" id="timerDuration" min="1" max="999" placeholder="5">
+    </div>
+    <div id="formError" class="error-message"></div>
+    <div class="form-buttons">
+        <button id="createTimerBtn" class="primary-btn">Create Timer</button>
+        <button id="cancelTimerBtn" class="secondary-btn">Cancel</button>
+    </div>
 </div>
 
     <script src="app.js"></script>
