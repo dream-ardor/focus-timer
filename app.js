@@ -1,11 +1,37 @@
-// Version 3: The correct approach with pause/resume
+// Timer data structure
+let timers = [];
+let nextTimerID = 1;  // Counter for unique IDs
 
-let timeLeft = 5;
-let timerID = null;
-let isRunning = false;
+// Create initial default timer
+function createTimer(name, durationMinutes) {
+    return {
+        id: nextTimerID++,           // Unique ID, then increment counter
+        name: name,                   // User-facing name
+        duration: durationMinutes * 60,  // Total time in seconds
+        timeLeft: durationMinutes * 60,  // Current countdown value
+        isRunning: false,             // Currently counting down?
+        timerID: null,                // setInterval reference
+        alarmInterval: null           // Alarm repeat interval
+    };
+}
+
+// Initialize with one default timer
+timers.push(createTimer('Focus Timer', 5));
 
 const displayElement = document.getElementById('display');
 const startButton = document.getElementById('startBtn');
+
+// Helper: Get the current (first) timer
+// For now, we only work with timers[0]
+// Later, we'll work with multiple timers
+function getCurrentTimer() {
+    return timers[0];
+}
+
+// Helper: Update a timer's display
+function updateTimerDisplay(timer) {
+    displayElement.textContent = formatTime(timer.timeLeft);
+}
 
 // === AUDIO ALERT ===
 
@@ -49,13 +75,19 @@ function playAlertSound() {
 function vibrateAlert() {
     // Check if device supports vibration
     if ('vibrate' in navigator) {
-        // Vibration pattern: [vibrate, pause, vibrate, pause, ...]
-        // Times are in milliseconds
-        // Pattern: long buzz (500ms), pause (200ms), long buzz (500ms)
-        navigator.vibrate([500, 200, 500]);
-        console.log('Vibration triggered');
+        console.log('Vibration API is available');
+        
+        // Try to vibrate
+        const result = navigator.vibrate([500, 200, 500]);
+        console.log('Vibrate result:', result);
+        
+        if (result) {
+            console.log('Vibration triggered successfully');
+        } else {
+            console.log('Vibration call returned false');
+        }
     } else {
-        console.log('Vibration not supported on this device');
+        console.log('Vibration API not supported on this device/browser');
     }
 }
 
@@ -132,21 +164,21 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function updateDisplay() {
-    displayElement.textContent = formatTime(timeLeft);
-}
-
 function tick() {
-    timeLeft = timeLeft - 1;
-    updateDisplay();
+    const timer = getCurrentTimer();
     
-    if (timeLeft <= 0) {
-        clearInterval(timerID);
-        timerID = null;
-        isRunning = false;
+    // Countdown
+    timer.timeLeft = timer.timeLeft - 1;
+    updateTimerDisplay(timer);
+    
+    // Check if finished
+    if (timer.timeLeft <= 0) {
+        clearInterval(timer.timerID);
+        timer.timerID = null;
+        timer.isRunning = false;
         startButton.textContent = 'Start';
         
-        // START THE ALARM
+        // Start the alarm
         startAlarm();
         
         console.log('Timer finished!');
@@ -154,35 +186,37 @@ function tick() {
 }
 
 // Set initial display
-updateDisplay();
+updateTimerDisplay(getCurrentTimer());
 
 // === START/PAUSE BUTTON ===
 
 startButton.addEventListener('click', function() {
-    if (isRunning) {
+    const timer = getCurrentTimer();
+    
+    if (timer.isRunning) {
         // PAUSE
-        clearInterval(timerID);
-        timerID = null;
-        isRunning = false;
+        clearInterval(timer.timerID);
+        timer.timerID = null;
+        timer.isRunning = false;
         startButton.textContent = 'Resume';
-        console.log('Timer paused at', timeLeft, 'seconds');
+        console.log('Timer paused at', timer.timeLeft, 'seconds');
     } else {
         // If timer finished, reset it
-        if (timeLeft <= 0) {
-            timeLeft = 300;
-            updateDisplay();
+        if (timer.timeLeft <= 0) {
+            timer.timeLeft = timer.duration;  // Reset to original duration
+            updateTimerDisplay(timer);
         }
         
         // START or RESUME
-        isRunning = true;
+        timer.isRunning = true;
         startButton.textContent = 'Pause';
-        console.log('Timer starting from', timeLeft, 'seconds');
+        console.log('Timer starting from', timer.timeLeft, 'seconds');
         
         // Run first tick immediately
         tick();
         
         // Then continue ticking every second
-        timerID = setInterval(tick, 1000);
+        timer.timerID = setInterval(tick, 1000);
     }
 });
 
@@ -191,21 +225,23 @@ startButton.addEventListener('click', function() {
 const resetButton = document.getElementById('resetBtn');
 
 resetButton.addEventListener('click', function() {
+    const timer = getCurrentTimer();
+    
     // Stop the alarm if it's going
     stopAlarm();
     
     // Stop the timer if running
-    if (isRunning) {
-        clearInterval(timerID);
-        timerID = null;
-        isRunning = false;
+    if (timer.isRunning) {
+        clearInterval(timer.timerID);
+        timer.timerID = null;
+        timer.isRunning = false;
     }
     
-    // Reset everything to initial state
-    timeLeft = 300;
-    updateDisplay();
+    // Reset to original duration
+    timer.timeLeft = timer.duration;
+    updateTimerDisplay(timer);
     startButton.textContent = 'Start';
-    console.log('Timer reset to 5:00');
+    console.log('Timer reset to', formatTime(timer.duration));
 });
 
 // === CUSTOM TIME INPUT ===
@@ -228,11 +264,13 @@ function clearError() {
 
 // Function to validate and set custom time
 function setCustomTime() {
+    const timer = getCurrentTimer();
+    
     // Clear any previous errors
     clearError();
     
     // Don't allow changing time while timer is running
-    if (isRunning) {
+    if (timer.isRunning) {
         showError('Pause the timer before changing duration');
         return;
     }
@@ -274,11 +312,12 @@ function setCustomTime() {
     }
     
     // ALL VALIDATION PASSED
-    // Convert minutes to seconds and update timer
-    timeLeft = minutes * 60;
-    updateDisplay();
+    // Update both duration and timeLeft
+    timer.duration = minutes * 60;
+    timer.timeLeft = minutes * 60;
+    updateTimerDisplay(timer);
     
-    console.log(`Timer set to ${minutes} minutes (${timeLeft} seconds)`);
+    console.log(`Timer set to ${minutes} minutes (${timer.timeLeft} seconds)`);
 }
 
 // Listen for Set button click
