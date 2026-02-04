@@ -23,7 +23,6 @@ timers.push(createTimer('Focus Timer', 5));
 const BEEP_SOUND = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm==';
 
 let isMuted = false;
-const alertSound = new Audio(BEEP_SOUND);
 
 function playAlertSound() {
     if (isMuted) {
@@ -31,8 +30,11 @@ function playAlertSound() {
         return;
     }
     
-    alertSound.currentTime = 0;
-    const playPromise = alertSound.play();
+    // Create new audio element for each play
+    // This avoids conflicts when multiple timers alarm simultaneously
+    const sound = new Audio(BEEP_SOUND);
+    
+    const playPromise = sound.play();
     
     if (playPromise !== undefined) {
         playPromise
@@ -56,8 +58,10 @@ function vibrateAlert() {
 
 // === ALARM SYSTEM ===
 
-let alarmInterval = null;
 const dismissButton = document.getElementById('dismissBtn');
+if (dismissButton) {
+    dismissButton.addEventListener('click', stopAlarm);
+}
 
 function flashScreen() {
     const container = document.querySelector('.container');
@@ -69,9 +73,16 @@ function flashScreen() {
     }, 300);
 }
 
-function startAlarm() {
+function startAlarm(timerID) {
+    const timer = findTimer(timerID);
+    if (!timer) return;
     console.log('Alarm started');
-    
+   //stop any existing timer for this alarm 
+    if(timer.alarmInterval) {
+        clearInterval(timer.alarmInterval);
+    }
+
+
     dismissButton.style.display = 'block';
     document.title = '⏰ TIME\'S UP!';
     flashScreen();
@@ -79,25 +90,23 @@ function startAlarm() {
     playAlertSound();
     vibrateAlert();
     
-    alarmInterval = setInterval(function() {
+    timer.alarmInterval = setInterval(function() {
         playAlertSound();
         vibrateAlert();
     }, 2000);
 }
 
 function stopAlarm() {
-    console.log('Alarm dismissed');
-    
-    if (alarmInterval !== null) {
-        clearInterval(alarmInterval);
-        alarmInterval = null;
+   timers.forEach(timer => {
+    if(timer.alarmInterval){
+        clearInterval(timer.alarmInterval);
+        timer.alarmInterval = null;
     }
+   });
     
     dismissButton.style.display = 'none';
     document.title = 'Focus Timer';
 }
-
-dismissButton.addEventListener('click', stopAlarm);
 
 // === TIMER FUNCTIONS ===
 
@@ -125,7 +134,7 @@ function tick(timerID) {
         timer.timerID = null;
         timer.isRunning = false;
         
-        startAlarm();
+        startAlarm(timer.id);
         renderTimers(); // Re-render to show stopped state
         
         console.log('Timer finished:', timer.name);
