@@ -239,3 +239,116 @@ button:hover {
 .secondary-btn:hover {
     background: #555;
 }
+
+/* Timers Container */
+.timers-container {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Individual Timer Card */
+.timer-card {
+    background: white;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.timer-card.running {
+    border-color: #007AFF;
+    background: #F0F8FF;
+}
+
+.timer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.timer-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+.timer-display {
+    font-size: 48px;
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+    margin: 16px 0;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.timer-controls button {
+    flex: 1;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.start-btn {
+    background: #34C759;
+    color: white;
+}
+
+.start-btn:hover {
+    background: #2DB04A;
+}
+
+.pause-btn {
+    background: #FF9500;
+    color: white;
+}
+
+.pause-btn:hover {
+    background: #E08600;
+}
+
+.reset-btn {
+    background: #007AFF;
+    color: white;
+}
+
+.reset-btn:hover {
+    background: #0051D5;
+}
+
+.delete-btn {
+    background: #FF3B30;
+    color: white;
+}
+
+.delete-btn:hover {
+    background: #D32F2F;
+}
+
+/* Global Controls */
+.global-controls {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #999;
+}
+
+.empty-state p {
+    font-size: 18px;
+    margin-bottom: 8px;
+}

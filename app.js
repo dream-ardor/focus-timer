@@ -1,160 +1,103 @@
 // Timer data structure
 let timers = [];
-let nextTimerID = 1;  // Counter for unique IDs
+let nextTimerID = 1;
 
 // Create initial default timer
 function createTimer(name, durationMinutes) {
     return {
-        id: nextTimerID++,           // Unique ID, then increment counter
-        name: name,                   // User-facing name
-        duration: durationMinutes * 60,  // Total time in seconds
-        timeLeft: durationMinutes * 60,  // Current countdown value
-        isRunning: false,             // Currently counting down?
-        timerID: null,                // setInterval reference
-        alarmInterval: null           // Alarm repeat interval
+        id: nextTimerID++,
+        name: name,
+        duration: durationMinutes * 60,
+        timeLeft: durationMinutes * 60,
+        isRunning: false,
+        timerID: null,
+        alarmInterval: null
     };
 }
 
 // Initialize with one default timer
 timers.push(createTimer('Focus Timer', 5));
 
-const displayElement = document.getElementById('display');
-const startButton = document.getElementById('startBtn');
-
-// Helper: Get the current (first) timer
-// For now, we only work with timers[0]
-// Later, we'll work with multiple timers
-function getCurrentTimer() {
-    return timers[0];
-}
-
-// Helper: Update a timer's display
-function updateTimerDisplay(timer) {
-    displayElement.textContent = formatTime(timer.timeLeft);
-}
-
 // === AUDIO ALERT ===
 
-// Simple beep sound (base64 encoded)
 const BEEP_SOUND = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+Dyvm==';
 
-let isMuted = false; // Track mute state
-
-// Create audio element
+let isMuted = false;
 const alertSound = new Audio(BEEP_SOUND);
 
-// Function to play alert sound
 function playAlertSound() {
     if (isMuted) {
         console.log('Alert muted by user');
         return;
     }
     
-    // Reset audio to beginning (in case it's already played)
     alertSound.currentTime = 0;
-    
-    // Attempt to play
     const playPromise = alertSound.play();
     
-    // Handle the promise (could fail due to browser policies)
     if (playPromise !== undefined) {
         playPromise
-            .then(() => {
-                console.log('Alert sound played successfully');
-            })
+            .then(() => console.log('Alert sound played successfully'))
             .catch(error => {
                 console.warn('Could not play alert sound:', error);
-                console.log('User may need to interact with page first');
             });
     }
 }
 
 // === VIBRATION ALERT ===
 
-// Function to trigger vibration
 function vibrateAlert() {
-    // Check if device supports vibration
     if ('vibrate' in navigator) {
-        console.log('Vibration API is available');
-        
-        // Try to vibrate
         const result = navigator.vibrate([500, 200, 500]);
-        console.log('Vibrate result:', result);
-        
-        if (result) {
-            console.log('Vibration triggered successfully');
-        } else {
-            console.log('Vibration call returned false');
-        }
+        console.log('Vibration triggered:', result);
     } else {
-        console.log('Vibration API not supported on this device/browser');
+        console.log('Vibration not supported');
     }
 }
 
 // === ALARM SYSTEM ===
 
-let alarmInterval = null; // Track repeating alarm
+let alarmInterval = null;
 const dismissButton = document.getElementById('dismissBtn');
 
-// Function to flash the screen
 function flashScreen() {
     const container = document.querySelector('.container');
-    
-    // Add flash class
     container.style.backgroundColor = '#FF3B30';
     container.style.transition = 'background-color 0.3s';
     
-    // Reset after brief moment
     setTimeout(function() {
         container.style.backgroundColor = 'white';
     }, 300);
 }
 
-// Function to start the alarm (repeating sound + vibration)
 function startAlarm() {
-    console.log('Alarm started - repeating every 2 seconds');
+    console.log('Alarm started');
     
-    // Show dismiss button
     dismissButton.style.display = 'block';
-    
-    // Change page title (visible in browser tab)
     document.title = '⏰ TIME\'S UP!';
-    
-    // Flash the screen
     flashScreen();
     
-    // Play sound and vibrate immediately
     playAlertSound();
     vibrateAlert();
     
-    // Then repeat every 2 seconds
     alarmInterval = setInterval(function() {
         playAlertSound();
         vibrateAlert();
-    }, 2000); // 2000ms = 2 seconds
+    }, 2000);
 }
 
-// Function to stop the alarm
 function stopAlarm() {
     console.log('Alarm dismissed');
     
-    // Stop repeating
     if (alarmInterval !== null) {
         clearInterval(alarmInterval);
         alarmInterval = null;
     }
     
-    // Hide dismiss button
     dismissButton.style.display = 'none';
-    
-    // Reset page title
     document.title = 'Focus Timer';
 }
 
-// Listen for dismiss button click
-dismissButton.addEventListener('click', function() {
-    stopAlarm();
-});
+dismissButton.addEventListener('click', stopAlarm);
 
 // === TIMER FUNCTIONS ===
 
@@ -164,178 +107,217 @@ function formatTime(seconds) {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function tick() {
-    const timer = getCurrentTimer();
+// Find timer by ID
+function findTimer(id) {
+    return timers.find(t => t.id === id);
+}
+
+// Tick function for a specific timer
+function tick(timerID) {
+    const timer = findTimer(timerID);
+    if (!timer) return;
     
-    // Countdown
     timer.timeLeft = timer.timeLeft - 1;
-    updateTimerDisplay(timer);
+    renderTimers(); // Re-render to update display
     
-    // Check if finished
     if (timer.timeLeft <= 0) {
         clearInterval(timer.timerID);
         timer.timerID = null;
         timer.isRunning = false;
-        startButton.textContent = 'Start';
         
-        // Start the alarm
         startAlarm();
+        renderTimers(); // Re-render to show stopped state
         
-        console.log('Timer finished!');
+        console.log('Timer finished:', timer.name);
     }
 }
 
-// Set initial display
-updateTimerDisplay(getCurrentTimer());
+// === DYNAMIC UI RENDERING ===
 
-// === START/PAUSE BUTTON ===
+const timersContainer = document.getElementById('timersContainer');
 
-startButton.addEventListener('click', function() {
-    const timer = getCurrentTimer();
+// Render all timers
+function renderTimers() {
+    // Clear container
+    timersContainer.innerHTML = '';
+    
+    // If no timers, show empty state
+    if (timers.length === 0) {
+        timersContainer.innerHTML = `
+            <div class="empty-state">
+                <p>No timers yet</p>
+                <p>Click "+ Add Timer" to create one</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Create card for each timer
+    timers.forEach(timer => {
+        const card = createTimerCard(timer);
+        timersContainer.appendChild(card);
+    });
+}
+
+// Create HTML element for one timer
+function createTimerCard(timer) {
+    // Create card container
+    const card = document.createElement('div');
+    card.className = 'timer-card';
+    if (timer.isRunning) {
+        card.classList.add('running');
+    }
+    
+    // Timer header (name)
+    const header = document.createElement('div');
+    header.className = 'timer-header';
+    
+    const nameEl = document.createElement('div');
+    nameEl.className = 'timer-name';
+    nameEl.textContent = timer.name;
+    
+    header.appendChild(nameEl);
+    
+    // Timer display (countdown)
+    const display = document.createElement('div');
+    display.className = 'timer-display';
+    display.textContent = formatTime(timer.timeLeft);
+    
+    // Controls
+    const controls = document.createElement('div');
+    controls.className = 'timer-controls';
+    
+    // Start/Pause button
+    const startPauseBtn = document.createElement('button');
+    startPauseBtn.className = timer.isRunning ? 'pause-btn' : 'start-btn';
+    startPauseBtn.textContent = timer.isRunning ? 'Pause' : 'Start';
+    startPauseBtn.dataset.id = timer.id;
+    startPauseBtn.dataset.action = 'startPause';
+    
+    // Reset button
+    const resetBtn = document.createElement('button');
+    resetBtn.className = 'reset-btn';
+    resetBtn.textContent = 'Reset';
+    resetBtn.dataset.id = timer.id;
+    resetBtn.dataset.action = 'reset';
+    
+    // Delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.dataset.id = timer.id;
+    deleteBtn.dataset.action = 'delete';
+    
+    controls.appendChild(startPauseBtn);
+    controls.appendChild(resetBtn);
+    controls.appendChild(deleteBtn);
+    
+    // Assemble card
+    card.appendChild(header);
+    card.appendChild(display);
+    card.appendChild(controls);
+    
+    return card;
+}
+
+// === EVENT DELEGATION ===
+
+// Single listener for all timer buttons
+timersContainer.addEventListener('click', function(event) {
+    const button = event.target;
+    
+    // Check if a button was clicked
+    if (!button.dataset.action) return;
+    
+    const timerID = parseInt(button.dataset.id);
+    const action = button.dataset.action;
+    
+    if (action === 'startPause') {
+        handleStartPause(timerID);
+    } else if (action === 'reset') {
+        handleReset(timerID);
+    } else if (action === 'delete') {
+        handleDelete(timerID);
+    }
+});
+
+// Handle Start/Pause
+function handleStartPause(timerID) {
+    const timer = findTimer(timerID);
+    if (!timer) return;
     
     if (timer.isRunning) {
         // PAUSE
         clearInterval(timer.timerID);
         timer.timerID = null;
         timer.isRunning = false;
-        startButton.textContent = 'Resume';
-        console.log('Timer paused at', timer.timeLeft, 'seconds');
+        console.log('Timer paused:', timer.name);
     } else {
-        // If timer finished, reset it
+        // START or RESUME
         if (timer.timeLeft <= 0) {
-            timer.timeLeft = timer.duration;  // Reset to original duration
-            updateTimerDisplay(timer);
+            timer.timeLeft = timer.duration;
         }
         
-        // START or RESUME
         timer.isRunning = true;
-        startButton.textContent = 'Pause';
-        console.log('Timer starting from', timer.timeLeft, 'seconds');
+        console.log('Timer started:', timer.name);
         
-        // Run first tick immediately
-        tick();
+        // First tick immediately
+        tick(timer.id);
         
-        // Then continue ticking every second
-        timer.timerID = setInterval(tick, 1000);
+        // Then every second
+        timer.timerID = setInterval(() => tick(timer.id), 1000);
     }
-});
-
-// === RESET BUTTON ===
-
-const resetButton = document.getElementById('resetBtn');
-
-resetButton.addEventListener('click', function() {
-    const timer = getCurrentTimer();
     
-    // Stop the alarm if it's going
+    renderTimers();
+}
+
+// Handle Reset
+function handleReset(timerID) {
+    const timer = findTimer(timerID);
+    if (!timer) return;
+    
     stopAlarm();
     
-    // Stop the timer if running
     if (timer.isRunning) {
         clearInterval(timer.timerID);
         timer.timerID = null;
         timer.isRunning = false;
     }
     
-    // Reset to original duration
     timer.timeLeft = timer.duration;
-    updateTimerDisplay(timer);
-    startButton.textContent = 'Start';
-    console.log('Timer reset to', formatTime(timer.duration));
-});
-
-// === CUSTOM TIME INPUT ===
-
-const minutesInput = document.getElementById('minutesInput');
-const setButton = document.getElementById('setBtn');
-const errorMessage = document.getElementById('errorMessage');
-
-// Function to show error message
-function showError(message) {
-    errorMessage.textContent = message;
-    minutesInput.classList.add('invalid');
+    console.log('Timer reset:', timer.name);
+    
+    renderTimers();
 }
 
-// Function to clear error message
-function clearError() {
-    errorMessage.textContent = '';
-    minutesInput.classList.remove('invalid');
-}
-
-// Function to validate and set custom time
-function setCustomTime() {
-    const timer = getCurrentTimer();
+// Handle Delete
+function handleDelete(timerID) {
+    const timer = findTimer(timerID);
+    if (!timer) return;
     
-    // Clear any previous errors
-    clearError();
+    // Confirm deletion
+    const confirmDelete = confirm(`Delete timer "${timer.name}"?`);
+    if (!confirmDelete) return;
     
-    // Don't allow changing time while timer is running
+    // Stop timer if running
     if (timer.isRunning) {
-        showError('Pause the timer before changing duration');
-        return;
+        clearInterval(timer.timerID);
     }
     
-    // Get the input value and trim whitespace
-    const input = minutesInput.value.trim();
+    // Remove from array
+    timers = timers.filter(t => t.id !== timerID);
     
-    // Check if input is empty
-    if (input === '') {
-        showError('Please enter a number of minutes');
-        return;
-    }
+    console.log('Timer deleted:', timer.name);
     
-    // Convert to number
-    const minutes = Number(input);
-    
-    // Validate: Is it a number?
-    if (isNaN(minutes)) {
-        showError('Please enter a valid number');
-        return;
-    }
-    
-    // Validate: Is it an integer (no decimals)?
-    if (!Number.isInteger(minutes)) {
-        showError('Please enter whole minutes only');
-        return;
-    }
-    
-    // Validate: Minimum bound
-    if (minutes < 1) {
-        showError('Timer must be at least 1 minute');
-        return;
-    }
-    
-    // Validate: Maximum bound
-    if (minutes > 999) {
-        showError('Timer cannot exceed 999 minutes');
-        return;
-    }
-    
-    // ALL VALIDATION PASSED
-    // Update both duration and timeLeft
-    timer.duration = minutes * 60;
-    timer.timeLeft = minutes * 60;
-    updateTimerDisplay(timer);
-    
-    console.log(`Timer set to ${minutes} minutes (${timer.timeLeft} seconds)`);
+    renderTimers();
 }
-
-// Listen for Set button click
-setButton.addEventListener('click', setCustomTime);
-
-// Listen for Enter key in input field
-minutesInput.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        setCustomTime();
-    }
-});
 
 // === MUTE TOGGLE ===
 
 const muteButton = document.getElementById('muteBtn');
 
 muteButton.addEventListener('click', function() {
-    isMuted = !isMuted; // Toggle the state
+    isMuted = !isMuted;
     
     if (isMuted) {
         muteButton.textContent = '🔇';
@@ -356,37 +338,30 @@ const timerNameInput = document.getElementById('timerName');
 const timerDurationInput = document.getElementById('timerDuration');
 const formErrorElement = document.getElementById('formError');
 
-// Show the form when "Add Timer" is clicked
 addTimerBtn.addEventListener('click', function() {
     timerForm.style.display = 'block';
-    timerNameInput.value = '';  // Clear previous values
+    timerNameInput.value = '';
     timerDurationInput.value = '';
-    formErrorElement.textContent = '';  // Clear errors
-    timerNameInput.focus();  // Focus on name input
+    formErrorElement.textContent = '';
+    timerNameInput.focus();
 });
 
-// Hide the form when "Cancel" is clicked
 cancelTimerBtn.addEventListener('click', function() {
     timerForm.style.display = 'none';
     formErrorElement.textContent = '';
 });
 
-// Create new timer when "Create Timer" is clicked
 createTimerBtn.addEventListener('click', function() {
-    // Get values
     const name = timerNameInput.value.trim();
     const durationStr = timerDurationInput.value.trim();
     
-    // Clear previous errors
     formErrorElement.textContent = '';
     
-    // Validate name
     if (name === '') {
         formErrorElement.textContent = 'Please enter a timer name';
         return;
     }
     
-    // Validate duration
     if (durationStr === '') {
         formErrorElement.textContent = 'Please enter a duration';
         return;
@@ -414,16 +389,17 @@ createTimerBtn.addEventListener('click', function() {
         return;
     }
     
-    // ALL VALIDATION PASSED - Create the timer
+    // Create timer
     const newTimer = createTimer(name, duration);
     timers.push(newTimer);
     
     console.log('Timer created:', newTimer);
-    console.log('All timers:', timers);
     
-    // Hide the form
+    // Hide form and re-render
     timerForm.style.display = 'none';
-    
-    // Show success feedback (optional)
-    alert(`Timer "${name}" created for ${duration} minutes!`);
+    renderTimers();
 });
+
+// === INITIAL RENDER ===
+
+renderTimers();
