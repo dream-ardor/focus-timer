@@ -14,9 +14,72 @@ function createTimer(name, durationMinutes) {
         alarmInterval: null
     };
 }
+//load saved timers or create default
+const savedTimers = loadTimers();
 
-// Initialize with one default timer
-timers.push(createTimer('Focus Timer', 5));
+if (savedTimers.length > 0) {
+    timers = savedTimers;
+    //Update nextTimerID to avoid ID conflicts
+    const maxID = Math.max(...timers.map(t => t.id));
+    nextTimerID = maxID + 1;
+} else {
+    //no saved timers, create default
+    timers.push(createTimer('Focus Timer', 5));
+    saveTimers();
+}
+
+// === PERSISTENCE ===
+
+// Save timers to localStorage
+function saveTimers() {
+    try {
+        // Create a cleaned version without runtime state
+        const timersToSave = timers.map(timer => ({
+            id: timer.id,
+            name: timer.name,
+            duration: timer.duration,
+            timeLeft: timer.timeLeft
+            // Omit: isRunning, timerID, alarmInterval
+        }));
+        
+        localStorage.setItem('focus-timers', JSON.stringify(timersToSave));
+        console.log('Timers saved to localStorage');
+    } catch (error) {
+        console.error('Failed to save timers:', error);
+        // If localStorage is full or unavailable, fail gracefully
+    }
+}
+
+// Load timers from localStorage
+function loadTimers() {
+    try {
+        const saved = localStorage.getItem('focus-timers');
+        
+        if (!saved) {
+            console.log('No saved timers found');
+            return [];
+        }
+        
+        const parsed = JSON.parse(saved);
+        
+        // Reconstruct full timer objects with runtime state
+        const loadedTimers = parsed.map(saved => ({
+            id: saved.id,
+            name: saved.name,
+            duration: saved.duration,
+            timeLeft: saved.timeLeft,
+            isRunning: false,      // Always start stopped
+            timerID: null,
+            alarmInterval: null
+        }));
+        
+        console.log('Timers loaded from localStorage:', loadedTimers.length);
+        return loadedTimers;
+    } catch (error) {
+        console.error('Failed to load timers:', error);
+        return [];  // Return empty array on error
+    }
+}
 
 // === AUDIO ALERT ===
 
@@ -122,6 +185,7 @@ function findTimer(id) {
 }
 
 // Tick function for a specific timer
+// Tick function for a specific timer
 function tick(timerID) {
     const timer = findTimer(timerID);
     if (!timer) return;
@@ -129,10 +193,18 @@ function tick(timerID) {
     timer.timeLeft = timer.timeLeft - 1;
     renderTimers(); // Re-render to update display
     
+    // Save every 10 seconds to preserve progress
+    if (timer.timeLeft % 10 === 0) {
+        saveTimers();
+        console.log('💾 Progress saved at', formatTime(timer.timeLeft));
+    }
+    
     if (timer.timeLeft <= 0) {
         clearInterval(timer.timerID);
         timer.timerID = null;
         timer.isRunning = false;
+        
+        saveTimers(); // Save when finished
         
         startAlarm(timer.id);
         renderTimers(); // Re-render to show stopped state
@@ -295,6 +367,8 @@ function handleReset(timerID) {
     
     timer.timeLeft = timer.duration;
     console.log('Timer reset:', timer.name);
+
+    saveTimers();
     
     renderTimers();
 }
@@ -317,6 +391,8 @@ function handleDelete(timerID) {
     timers = timers.filter(t => t.id !== timerID);
     
     console.log('Timer deleted:', timer.name);
+
+    saveTimers();
     
     renderTimers();
 }
@@ -403,6 +479,8 @@ createTimerBtn.addEventListener('click', function() {
     timers.push(newTimer);
     
     console.log('Timer created:', newTimer);
+
+    saveTimers();
     
     // Hide form and re-render
     timerForm.style.display = 'none';
