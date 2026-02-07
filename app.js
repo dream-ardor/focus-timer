@@ -89,25 +89,24 @@ let isMuted = false;
 
 function playAlertSound() {
     if (isMuted) {
-        console.log('Alert muted by user');
+        console.log('🔇 Alert muted by user');
         return;
     }
     
-    // Create new audio element for each play
-    // This avoids conflicts when multiple timers alarm simultaneously
+    console.log('🔊 Playing alert sound at', new Date().toLocaleTimeString());
+    
     const sound = new Audio(BEEP_SOUND);
     
     const playPromise = sound.play();
     
     if (playPromise !== undefined) {
         playPromise
-            .then(() => console.log('Alert sound played successfully'))
+            .then(() => console.log('  ✅ Sound played successfully'))
             .catch(error => {
-                console.warn('Could not play alert sound:', error);
+                console.error('  ❌ Sound play failed:', error.message);
             });
     }
 }
-
 // === VIBRATION ALERT ===
 
 function vibrateAlert() {
@@ -139,9 +138,10 @@ function flashScreen() {
 function startAlarm(timerID) {
     const timer = findTimer(timerID);
     if (!timer) return;
-    console.log('Alarm started');
+    console.log('🚨 START ALARM for timer:', timer.id, timer.name, 'at', new Date().toLocaleTimeString());
    //stop any existing timer for this alarm 
     if(timer.alarmInterval) {
+        console.log('⚠️ Clearing existing alarm interval for timer:', timer.id);
         clearInterval(timer.alarmInterval);
     }
 
@@ -154,18 +154,29 @@ function startAlarm(timerID) {
     vibrateAlert();
     
     timer.alarmInterval = setInterval(function() {
+        console.log('🔔 Beep for timer:', timer.id, 'at', new Date().toLocaleTimeString());
         playAlertSound();
         vibrateAlert();
     }, 2000);
+
+    console.log('✅ Alarm interval created:', timer.alarmInterval);
 }
 
 function stopAlarm() {
-   timers.forEach(timer => {
-    if(timer.alarmInterval){
-        clearInterval(timer.alarmInterval);
-        timer.alarmInterval = null;
-    }
-   });
+    console.log('🛑 STOP ALARM called at', new Date().toLocaleTimeString());
+    
+    // Stop ALL timer alarms
+    let clearedCount = 0;
+    timers.forEach(timer => {
+        if (timer.alarmInterval) {
+            console.log('  ↳ Clearing alarm for timer:', timer.id, timer.name);
+            clearInterval(timer.alarmInterval);
+            timer.alarmInterval = null;
+            clearedCount++;
+        }
+    });
+    
+    console.log('✅ Cleared', clearedCount, 'alarm(s)');
     
     dismissButton.style.display = 'none';
     document.title = 'Focus Timer';
