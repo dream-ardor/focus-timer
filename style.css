@@ -352,3 +352,46 @@ button:hover {
     font-size: 18px;
     margin-bottom: 8px;
 }
+
+/* Progress Bar */
+.progress-container {
+    position: relative;
+    width: 100%;
+    height: 24px;
+    background: #E5E5E5;
+    border-radius: 12px;
+    margin: 12px 0;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #34C759 0%, #30D158 100%);
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+/* Pulse animation for running timers */
+.timer-card.running .progress-bar {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.75;
+    }
+}
+
+.progress-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    text-shadow: 0 0 2px rgba(255,255,255,0.8);
+}

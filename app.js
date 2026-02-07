@@ -263,6 +263,39 @@ function createTimerCard(timer) {
     const display = document.createElement('div');
     display.className = 'timer-display';
     display.textContent = formatTime(timer.timeLeft);
+
+    // Progress bar
+const progressContainer = document.createElement('div');
+progressContainer.className = 'progress-container';
+
+const progressBar = document.createElement('div');
+progressBar.className = 'progress-bar';
+
+// Calculate progress percentage
+const elapsed = timer.duration - timer.timeLeft;
+const progress = (elapsed / timer.duration) * 100;
+progressBar.style.width = progress + '%';
+
+// Color based on progress
+if (progress < 33) {
+    // Green (early stage)
+    progressBar.style.background = 'linear-gradient(90deg, #34C759 0%, #30D158 100%)';
+} else if (progress < 66) {
+    // Blue (middle stage)
+    progressBar.style.background = 'linear-gradient(90deg, #007AFF 0%, #0051D5 100%)';
+} else {
+    // Orange/Red (final stage)
+    progressBar.style.background = 'linear-gradient(90deg, #FF9500 0%, #FF3B30 100%)';
+}
+
+// Progress text
+const progressText = document.createElement('div');
+progressText.className = 'progress-text';
+// Show both percentage and time remaining
+progressText.textContent = Math.round(progress) + '% • ' + formatTime(timer.timeLeft) + ' left';
+
+progressContainer.appendChild(progressBar);
+progressContainer.appendChild(progressText);
     
     // Controls
     const controls = document.createElement('div');
@@ -296,6 +329,7 @@ function createTimerCard(timer) {
     // Assemble card
     card.appendChild(header);
     card.appendChild(display);
+    card.appendChild(progressContainer);
     card.appendChild(controls);
     
     return card;
