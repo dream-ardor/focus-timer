@@ -1,6 +1,7 @@
 // Timer data structure
 let timers = [];
 let nextTimerID = 1;
+const activeSounds = [];
 
 // Create initial default timer
 function createTimer(name, durationMinutes) {
@@ -96,12 +97,21 @@ function playAlertSound() {
     console.log('🔊 Playing alert sound at', new Date().toLocaleTimeString());
     
     const sound = new Audio(BEEP_SOUND);
+    activeSounds.push(sound);
+    
     
     const playPromise = sound.play();
     
     if (playPromise !== undefined) {
         playPromise
-            .then(() => console.log('  ✅ Sound played successfully'))
+            .then(() => {
+                console.log('  ✅ Sound played successfully');
+                // Remove from active list after playing
+                setTimeout(() => {
+                    const index = activeSounds.indexOf(sound);
+                    if (index > -1) activeSounds.splice(index, 1);
+                }, 2000);  // Beep duration
+            })
             .catch(error => {
                 console.error('  ❌ Sound play failed:', error.message);
             });
@@ -138,8 +148,10 @@ function flashScreen() {
 function startAlarm(timerID) {
     const timer = findTimer(timerID);
     if (!timer) return;
+
     console.log('🚨 START ALARM for timer:', timer.id, timer.name, 'at', new Date().toLocaleTimeString());
-   //stop any existing timer for this alarm 
+   
+    //stop any existing timer for this alarm 
     if(timer.alarmInterval) {
         console.log('⚠️ Clearing existing alarm interval for timer:', timer.id);
         clearInterval(timer.alarmInterval);
@@ -163,13 +175,21 @@ function startAlarm(timerID) {
 }
 
 function stopAlarm() {
-    console.log('🛑 STOP ALARM called at', new Date().toLocaleTimeString());
+    console.log('🛑 STOP ALARM called');
+    
+    // Stop all active audio
+    console.log('  ↳ Stopping', activeSounds.length, 'active sounds');
+    activeSounds.forEach(sound => {
+        sound.pause();
+        sound.currentTime = 0;
+    });
+    activeSounds.length = 0;  // Clear array
     
     // Stop ALL timer alarms
     let clearedCount = 0;
     timers.forEach(timer => {
         if (timer.alarmInterval) {
-            console.log('  ↳ Clearing alarm for timer:', timer.id, timer.name);
+            console.log('  ↳ Clearing alarm for timer:', timer.id);
             clearInterval(timer.alarmInterval);
             timer.alarmInterval = null;
             clearedCount++;
