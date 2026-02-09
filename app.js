@@ -202,6 +202,20 @@ function stopAlarm() {
     document.title = 'Focus Timer';
 }
 
+document.getElementById('testSound').addEventListener('click', function() {
+    console.log('Test button clicked');
+    const sound = new Audio(BEEP_SOUND);
+    const playPromise = sound.play();
+    
+    if (playPromise) {
+        playPromise
+            .then(() => console.log('✅ Test sound played'))
+            .catch(err => console.error('❌ Test sound failed:', err));
+    }
+});
+
+
+
 // === TIMER FUNCTIONS ===
 
 function formatTime(seconds) {
@@ -214,8 +228,6 @@ function formatTime(seconds) {
 function findTimer(id) {
     return timers.find(t => t.id === id);
 }
-
-// Tick function for a specific timer
 // Tick function for a specific timer
 function tick(timerID) {
     const timer = findTimer(timerID);
